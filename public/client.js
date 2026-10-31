@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from './jsm/controls/OrbitControls.js';
 import Stats from './jsm/libs/stats.module.js';
+import { bookMesh } from './book.js';
 
 class LorenzSystem {
     // standard parameters for the Lorenz Attractor
@@ -163,6 +164,18 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 // Added axes
 scene.add(new THREE.AxesHelper(50));
+scene.add(bookMesh);
+
+//light stuff
+// Add ambient light so everything is dimly lit
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+scene.add(ambientLight);
+
+// Add a directional light (like a sun or desk lamp) to give it specular highlights and depth
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+directionalLight.position.set(5, 10, 7);
+scene.add(directionalLight);
+
 // Changed the positon
 camera.position.set(20, 20, 20);
 // Changed the focus
@@ -192,6 +205,9 @@ function animate() {
     requestAnimationFrame(animate);
     render();
     stats.update();
+    // Spin it to check out your cover art!
+    bookMesh.rotation.x += 0.005;
+    bookMesh.rotation.y += 0.01;
     // update both Lorenz systems
     l1.update();
     l2.update();
