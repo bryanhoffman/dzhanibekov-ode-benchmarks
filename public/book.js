@@ -4,9 +4,9 @@ const textureLoader = new THREE.TextureLoader();
 const coverTexture = textureLoader.load('cover-5e.jpg');
 coverTexture.colorSpace = THREE.SRGBColorSpace;
 
-const width = 1.4;
-const height = 2.0;
-const depth = 0.35;
+const width = 12.4;
+const height = 17.7;
+const depth = 3.1;
 
 const geometry = new THREE.BoxGeometry(width, height, depth);
 

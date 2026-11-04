@@ -5,9 +5,9 @@ import { bookMesh } from './book.js';
 
 class LorenzSystem {
     // standard parameters for the Lorenz Attractor
-    rho = 28;
-    sigma = 10;
-    beta = 8 / 3;
+    I_x = 3.79;
+    I_y = 1.92;
+    I_z = 5.49;
     h = 0.005; // step size
 
     constructor(initialPosition, color, scene) {
@@ -55,9 +55,9 @@ class LorenzSystem {
     // ... well sort of only three but the midpoint it samples twice (*)
     getLorenzDerivatives(position) {
         return {
-            dx: -(3 - 2) * (position.z * position.y),
-            dy: (-(1 - 3) * (position.x * position.z)) / 2,
-            dz: (-(2 - 1) * (position.y * position.x)) / 3,
+            dx: ((this.I_y - this.I_z) / this.I_x) * (position.z * position.y),
+            dy: ((this.I_z - this.I_x) / this.I_y) * (position.x * position.z),
+            dz: ((this.I_x - this.I_y) / this.I_z) * (position.y * position.x),
         };
     }
 
@@ -184,8 +184,9 @@ controls.update();
 
 // Declare two LorenzSystems, one with a 0.0001 offset
 // Just like Lorenz did on accident
-let l1 = new LorenzSystem({ x: 0.01, y: 4, z: 0.003 }, { color: 0x00ffff }, scene);
-let l2 = new LorenzSystem({ x: 4, y: 0.01, z: 0.5 }, { color: 0xff00ff }, scene);
+//let l1 = new LorenzSystem({ x: 0.01, y: 4, z: 0.003 }, { color: 0x00ffff }, scene);
+let l1 = new LorenzSystem({ x: 4.0, y: 0.01, z: 0.0 }, { color: 0x00ffff }, scene);
+//let l2 = new LorenzSystem({ x: 4, y: 0.01, z: 0.5 }, { color: 0xff00ff }, scene);
 
 window.addEventListener(
     'resize',
@@ -206,11 +207,15 @@ function animate() {
     render();
     stats.update();
     // Spin it to check out your cover art!
-    bookMesh.rotation.x += 0.005;
-    bookMesh.rotation.y += 0.01;
+    // bookMesh.rotation.x += 0.0;
+    //bookMesh.rotation.y += 0.01;
+    let dt = 0.016;
+    bookMesh.rotateX(l1.position.x * dt);
+    bookMesh.rotateY(l1.position.y * dt);
+    bookMesh.rotateZ(l1.position.z * dt);
     // update both Lorenz systems
     l1.update();
-    l2.update();
+    // l2.update();
 }
 
 function render() {
