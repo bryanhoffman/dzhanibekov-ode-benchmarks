@@ -3,18 +3,20 @@ import { OrbitControls } from './jsm/controls/OrbitControls.js';
 import Stats from './jsm/libs/stats.module.js';
 import { bookMesh } from './book.js';
 
-class LorenzSystem {
-    // standard parameters for the Lorenz Attractor
+class SpinningBook {
+    // The moments of the Griffith's E&M textbook about each axis
+    // x is across the cover left to right
+    // y is up the cover bottom to top
+    // z is up through the cover
     I_x = 3.79;
     I_y = 1.92;
     I_z = 5.49;
     h = 0.005; // step size
 
     constructor(initialPosition, color, scene) {
-        // Hey it's that expand trick!
-        this.position = { ...initialPosition };
+        this.position = initialPosition;
         this.color = color;
-        // This will be a bob showing current point
+        // This will be a bob showing current point in phase space
         const sphereGeometry = new THREE.SphereGeometry(0.5, 32, 32);
         const material = new THREE.MeshBasicMaterial(color);
         this.sphere = new THREE.Mesh(sphereGeometry, material);
@@ -53,7 +55,7 @@ class LorenzSystem {
 
     // This function finds the derivatives at a single point RK4 uses four points
     // ... well sort of only three but the midpoint it samples twice (*)
-    getLorenzDerivatives(position) {
+    getDerivatives(position) {
         return {
             dx: ((this.I_y - this.I_z) / this.I_x) * (position.z * position.y),
             dy: ((this.I_z - this.I_x) / this.I_y) * (position.x * position.z),
@@ -61,10 +63,10 @@ class LorenzSystem {
         };
     }
 
-    // This uses getLorenzDerivatives on those four (three) points
+    // This uses getDerivatives on those four (three) points
     getRK4Vals() {
         // The derivatives at the initial point ...
-        const k1 = this.getLorenzDerivatives(this.position);
+        const k1 = this.getDerivatives(this.position);
 
         // ... inform where the second point which is ...
         const posK2 = {
@@ -74,7 +76,7 @@ class LorenzSystem {
         };
 
         // ... and we calculate the next set of derivatives which ...
-        const k2 = this.getLorenzDerivatives(posK2);
+        const k2 = this.getDerivatives(posK2);
 
         // ... informs how we sample the second point a second time ...
         const posK3 = {
@@ -83,7 +85,7 @@ class LorenzSystem {
             z: this.position.z + (this.h / 2) * k2.dz,
         };
 
-        const k3 = this.getLorenzDerivatives(posK3);
+        const k3 = this.getDerivatives(posK3);
 
         // ... which informs us what the fourth point is
         // AND how we sample it.
@@ -93,7 +95,7 @@ class LorenzSystem {
             z: this.position.z + this.h * k3.dz,
         };
 
-        const k4 = this.getLorenzDerivatives(posK4);
+        const k4 = this.getDerivatives(posK4);
 
         return { k1, k2, k3, k4 };
     }
@@ -164,7 +166,21 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 // Added axes
 scene.add(new THREE.AxesHelper(50));
+
+// add book
 scene.add(bookMesh);
+
+// add phase space arrow
+// Scale factor to push the arrow clear of the book's outer edges
+const ARROW_SCALE = 4.0;
+
+const dir = new THREE.Vector3(1, 0, 0);
+const origin = new THREE.Vector3(0, 0, 0);
+const initialLength = 4.0 * ARROW_SCALE;
+const color = 0x00ffff;
+
+const omegaArrow = new THREE.ArrowHelper(dir, origin, initialLength, color, 1.5, 0.8);
+scene.add(omegaArrow);
 
 //light stuff
 // Add ambient light so everything is dimly lit
@@ -182,11 +198,8 @@ camera.position.set(20, 20, 20);
 controls.target.set(0, 0, 0);
 controls.update();
 
-// Declare two LorenzSystems, one with a 0.0001 offset
-// Just like Lorenz did on accident
-//let l1 = new LorenzSystem({ x: 0.01, y: 4, z: 0.003 }, { color: 0x00ffff }, scene);
-let l1 = new LorenzSystem({ x: 4.0, y: 0.01, z: 0.0 }, { color: 0x00ffff }, scene);
-//let l2 = new LorenzSystem({ x: 4, y: 0.01, z: 0.5 }, { color: 0xff00ff }, scene);
+// Create our simulated rotating, rigid body
+let book = new SpinningBook({ x: 4.0, y: 0.1, z: 0.0 }, { color: 0x00ffff }, scene);
 
 window.addEventListener(
     'resize',
@@ -206,16 +219,28 @@ function animate() {
     requestAnimationFrame(animate);
     render();
     stats.update();
-    // Spin it to check out your cover art!
-    // bookMesh.rotation.x += 0.0;
-    //bookMesh.rotation.y += 0.01;
+
+    // h and dt don't have to be the same
     let dt = 0.016;
-    bookMesh.rotateX(l1.position.x * dt);
-    bookMesh.rotateY(l1.position.y * dt);
-    bookMesh.rotateZ(l1.position.z * dt);
-    // update both Lorenz systems
-    l1.update();
-    // l2.update();
+
+    book.update();
+
+    // This part is non abelian!
+    // Motivates a switch to quaternions
+    bookMesh.rotateX(book.position.x * dt);
+    bookMesh.rotateY(book.position.y * dt);
+    bookMesh.rotateZ(book.position.z * dt);
+
+    // Update the arrow helper
+    const omegaVec = new THREE.Vector3(book.position.x, book.position.y, book.position.z);
+    const omegaMag = omegaVec.length();
+
+    // Gemini code I don't follow yet
+    if (omegaMag > 0.0001) {
+        omegaArrow.setDirection(omegaVec.clone().normalize());
+        // Scale the length dynamically with omega magnitude so it extends outside the book
+        omegaArrow.setLength(omegaMag * ARROW_SCALE, 1.5, 0.8);
+    }
 }
 
 function render() {
@@ -223,5 +248,3 @@ function render() {
 }
 
 animate();
-
-// (*) It is actually a fourth point after the k2 step.

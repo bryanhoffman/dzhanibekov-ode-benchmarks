@@ -1,19 +1,23 @@
-# A recreation of the Lorenz Attractor visualized in ThreeJS
+# The Dzhanibekov Effect visualized in ThreeJS
 
-<img style="float:left; min-width:150px;" src="./Lorenz Attractor.png">
+The Dzhanibekov effect is a counter intuitive result that falls out of the equations of rotational motion in 3 dimensions. A rotating, rigid body with no torque applied can appear to flip periodically.
 
-In the year 1961, something happened and it happened by mistake. Lorenz was a
-meteorologist working at MIT. The computers then were nothing like what we have today.
-To simulate fluids at all, one had to simplify the math drastically. The Navier-Stokes
-equations are the gold standard, and we can simulate them today, but in 1961 that was a
-pipe dream. Lorenz, the meteorologist, had an LGP-30, a computer the size of a desk that
-was assembled of vacuum tubes.
+## 🎥 Demo
+
+<p align="center">
+  <img src="dzhanibekov_gif_0.gif" alt="3D Physics Simulation Demo" width="700px">
+</p>
+
+## To-do
+
+-Implement Quaternions
+-Compare numerical methods to explicit solutions involving Jacobi elliptic integrals
 
 ## Get Started
 
 ```bash
-git clone https://github.com/bryanhoffman/Lorenz-Attractor.git
-cd 'Lorenz Attractor'
+git clone https://github.com/bryanhoffman/dzhanibekov-ode-benchmarks.git
+cd dzhanibekov-ode-benchmarks
 npm install
 npm start
 ```
